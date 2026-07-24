@@ -21,8 +21,8 @@ class ProductResource extends JsonResource
             'category_id' => $this->category_id,
             'brand_id' => $this->brand_id,
             'in_stock' => (bool) $this->in_stock,
-            'average_rating' => $this->averageRating(),
-            'reviews_count' => $this->approvedReviews()->count(),
+            'average_rating' => isset($this->average_rating) ? round((float)$this->average_rating, 1) : 5.0,
+            'reviews_count' => isset($this->approved_reviews_count) ? (int)$this->approved_reviews_count : 0,
             'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
         ];
     }

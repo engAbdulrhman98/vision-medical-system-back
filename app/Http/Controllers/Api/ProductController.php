@@ -57,8 +57,10 @@ class ProductController extends Controller
 
         // Paginate results
         $products = $query->with(['category', 'brand'])
+            ->withCount(['approvedReviews as approved_reviews_count'])
+            ->withAvg(['approvedReviews as average_rating'], 'rating')
             ->latest()
-            ->paginate($request->input('per_page', 10));
+            ->get();
 
         return ProductResource::collection($products);
     }
