@@ -49,7 +49,7 @@ class DatabaseSeeder extends Seeder
         // Preserve default test@example.com user
         $defaultUser = User::where('email', 'test@example.com')->first();
         if (!$defaultUser) {
-            $defaultUser = User::factory()->create([
+            $defaultUser = User::create([
                 'name' => 'Test User Super Admin',
                 'email' => 'test@example.com',
                 'password' => Hash::make('password'),
