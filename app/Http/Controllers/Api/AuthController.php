@@ -58,7 +58,10 @@ class AuthController extends Controller
             }
         }
 
-        $user = User::where('email', $validated['email'])->first();
+        $email = strtolower(trim($validated['email']));
+        $password = trim($validated['password']);
+
+        $user = User::where('email', $email)->first();
 
         // If user is missing or default account password fails due to double hash, fix/create user
         $defaultAccounts = [
@@ -71,16 +74,16 @@ class AuthController extends Controller
             'inventory@example.com'    => ['name' => 'أ. رانيا الباز',            'pass' => 'password', 'role' => 'Sale'],
         ];
 
-        if (isset($defaultAccounts[$validated['email']]) && $validated['password'] === $defaultAccounts[$validated['email']]['pass']) {
-            $info = $defaultAccounts[$validated['email']];
+        if (isset($defaultAccounts[$email]) && $password === $defaultAccounts[$email]['pass']) {
+            $info = $defaultAccounts[$email];
             if (!$user) {
                 $user = User::create([
                     'name' => $info['name'],
-                    'email' => $validated['email'],
+                    'email' => $email,
                     'password' => Hash::make($info['pass']),
                 ]);
                 try { $user->assignRole($info['role']); } catch (\Throwable $t) {}
-            } else if (!Hash::check($validated['password'], $user->password)) {
+            } else {
                 $user->password = Hash::make($info['pass']);
                 $user->save();
             }
