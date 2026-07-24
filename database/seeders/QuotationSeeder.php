@@ -36,34 +36,38 @@ class QuotationSeeder extends Seeder
             $amount = rand(5, 120) * 1000;
             $prod = $products->isNotEmpty() ? $products[($i - 1) % $products->count()] : null;
 
-            $quotation = Quotation::create([
-                'client_id' => $client->id,
-                'quotation_number' => 'QT-2026-' . str_pad((string)$i, 4, '0', STR_PAD_LEFT),
-                'status' => $status,
-                'total_amount' => $amount,
-                'items' => [
-                    [
-                        'name' => $prod ? $prod->getTranslation('name', 'ar') : 'تجهيزات أجهزة طبية',
-                        'quantity' => rand(1, 5),
-                        'unit_price' => $amount / 2,
-                        'total_price' => $amount,
-                    ]
-                ],
-                'valid_until' => now()->addDays(rand(10, 60)),
-                'notes' => 'عرض سعر مبيعات رسمي مقدم لـ ' . $client->getTranslation('name', 'ar'),
-            ]);
+            $quotation = Quotation::firstOrCreate(
+                ['quotation_number' => 'QT-2026-' . str_pad((string)$i, 4, '0', STR_PAD_LEFT)],
+                [
+                    'client_id' => $client->id,
+                    'status' => $status,
+                    'total_amount' => $amount,
+                    'items' => [
+                        [
+                            'name' => $prod ? $prod->getTranslation('name', 'ar') : 'تجهيزات أجهزة طبية',
+                            'quantity' => rand(1, 5),
+                            'unit_price' => $amount / 2,
+                            'total_price' => $amount,
+                        ]
+                    ],
+                    'valid_until' => now()->addDays(rand(10, 60)),
+                    'notes' => 'عرض سعر مبيعات رسمي مقدم لـ ' . $client->getTranslation('name', 'ar'),
+                ]
+            );
 
             // Seed Invoices for accepted/sent quotations
             if (in_array($status, ['accepted', 'sent'])) {
-                Invoice::create([
-                    'client_id' => $client->id,
-                    'quotation_id' => $quotation->id,
-                    'invoice_number' => 'INV-2026-' . str_pad((string)$i, 4, '0', STR_PAD_LEFT),
-                    'status' => ($i % 2 === 0) ? 'paid' : 'unpaid',
-                    'amount' => $amount,
-                    'due_date' => now()->addDays(rand(10, 30)),
-                    'notes' => 'فاتورة مبيعات رسمية صادرة للحسابات',
-                ]);
+                Invoice::firstOrCreate(
+                    ['invoice_number' => 'INV-2026-' . str_pad((string)$i, 4, '0', STR_PAD_LEFT)],
+                    [
+                        'client_id' => $client->id,
+                        'quotation_id' => $quotation->id,
+                        'status' => ($i % 2 === 0) ? 'paid' : 'unpaid',
+                        'amount' => $amount,
+                        'due_date' => now()->addDays(rand(10, 30)),
+                        'notes' => 'فاتورة مبيعات رسمية صادرة للحسابات',
+                    ]
+                );
             }
 
             // Seed Invoice Requests
