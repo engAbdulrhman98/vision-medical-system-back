@@ -47,17 +47,14 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Auto-seed default admin and employee accounts if database is empty
-        if (User::count() === 0) {
+        // Auto-seed all catalog, tasks, clients, and demo data if products/categories are empty
+        if (\App\Models\Product::count() === 0 || \App\Models\Category::count() === 0) {
             try {
                 \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
             } catch (\Throwable $e) {
-                // Fallback: Create super admin directly if seeder encounters duplicate roles
-                User::create([
-                    'name' => 'م. أحمد علي (مدير النظام)',
-                    'email' => 'admin@vision-medical.com',
-                    'password' => Hash::make('admin123'),
-                ]);
+                try {
+                    (new \Database\Seeders\DatabaseSeeder())->run();
+                } catch (\Throwable $t) {}
             }
         }
 

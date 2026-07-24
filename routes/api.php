@@ -52,6 +52,14 @@ Route::post('/contacts', [ContactMessageController::class, 'store']);
 Route::get('/settings', [SettingController::class, 'index']);
 Route::get('/app-download', [\App\Http\Controllers\Api\AppDownloadController::class, 'getAppInfo']);
 Route::get('/app/download/apk', [\App\Http\Controllers\Api\AppDownloadController::class, 'downloadApk']);
+Route::get('/seed-database', function() {
+    try {
+        (new \Database\Seeders\DatabaseSeeder())->run();
+        return response()->json(['status' => true, 'message' => 'Database populated successfully with products, tasks, clients, and categories!']);
+    } catch (\Throwable $e) {
+        return response()->json(['status' => false, 'error' => $e->getMessage()]);
+    }
+});
 
 Route::middleware(['auth:sanctum', 'api.activity'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
