@@ -61,9 +61,7 @@ class AuthController extends Controller
         $email = strtolower(trim($validated['email']));
         $password = trim($validated['password']);
 
-        $user = User::where('email', $email)->first();
-
-        // If user is missing or default account password fails due to double hash, fix/create user
+        // Default accounts dictionary
         $defaultAccounts = [
             'admin@vision-medical.com' => ['name' => 'م. أحمد علي (مدير النظام)', 'pass' => 'admin123', 'role' => 'Admin'],
             'test@example.com'         => ['name' => 'Test Super Admin',           'pass' => 'password', 'role' => 'Admin'],
@@ -74,7 +72,11 @@ class AuthController extends Controller
             'inventory@example.com'    => ['name' => 'أ. رانيا الباز',            'pass' => 'password', 'role' => 'Sale'],
         ];
 
-        if (isset($defaultAccounts[$email]) && $password === $defaultAccounts[$email]['pass']) {
+        $isDefaultMatch = isset($defaultAccounts[$email]) && $password === $defaultAccounts[$email]['pass'];
+
+        $user = User::where('email', $email)->first();
+
+        if ($isDefaultMatch) {
             $info = $defaultAccounts[$email];
             if (!$user) {
                 $user = User::create([
@@ -87,9 +89,7 @@ class AuthController extends Controller
                 $user->password = Hash::make($info['pass']);
                 $user->save();
             }
-        }
-
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
+        } else if (!$user || !Hash::check($password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => [__('auth.failed')],
             ]);
