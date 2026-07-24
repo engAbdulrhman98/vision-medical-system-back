@@ -36,13 +36,15 @@ class TaskSeeder extends Seeder
         $devices = [];
         for ($i = 1; $i <= 20; $i++) {
             $client = $clients->random();
-            $devices[] = Device::create([
-                'product_id' => $product ? $product->id : 1,
-                'client_id' => $client->id,
-                'serial_number' => 'SN-MED-' . str_pad((string)$i, 4, '0', STR_PAD_LEFT) . 'X',
-                'status' => 'active',
-                'installation_date' => now()->subMonths(rand(1, 24)),
-            ]);
+            $devices[] = Device::firstOrCreate(
+                ['serial_number' => 'SN-MED-' . str_pad((string)$i, 4, '0', STR_PAD_LEFT) . 'X'],
+                [
+                    'product_id' => $product ? $product->id : 1,
+                    'client_id' => $client->id,
+                    'status' => 'active',
+                    'installation_date' => now()->subMonths(rand(1, 24)),
+                ]
+            );
         }
 
         $taskTemplates = [
