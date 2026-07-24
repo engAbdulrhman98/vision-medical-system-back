@@ -1,4 +1,6 @@
-FROM php:8.2-cli-alpine
+FROM php:8.4-cli-alpine
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # Install system dependencies & PHP extensions
 RUN apk add --no-cache \
@@ -12,7 +14,7 @@ RUN apk add --no-cache \
     icu-dev \
     oniguruma-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql gd zip bcmath mbstring intl
+    && docker-php-ext-install pdo_mysql gd zip bcmath mbstring intl exif
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
