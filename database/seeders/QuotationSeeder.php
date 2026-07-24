@@ -72,19 +72,21 @@ class QuotationSeeder extends Seeder
 
             // Seed Invoice Requests
             $invReqStatus = $invStatuses[($i - 1) % count($invStatuses)];
-            $invReq = InvoiceRequest::create([
-                'user_id' => $seller ? $seller->id : 1,
-                'client_id' => $client->id,
-                'accountant_id' => $accountant ? $accountant->id : null,
-                'collector_id' => $accountant ? $accountant->id : null,
-                'request_type' => ($i % 2 === 0) ? 'sales_product' : 'maintenance_service',
-                'type' => 'single',
-                'total_amount' => $amount,
-                'status' => $invReqStatus,
-                'notes' => 'طلب تحصيل وتجهيز فاتورة رسمية من قسم الحسابات',
-                'issued_at' => in_array($invReqStatus, ['issued', 'client_approved', 'collected']) ? now()->subDays(rand(2, 10)) : null,
-                'collected_at' => $invReqStatus === 'collected' ? now()->subDays(rand(1, 5)) : null,
-            ]);
+            $invReq = InvoiceRequest::firstOrCreate(
+                ['notes' => 'طلب تحصيل وتجهيز فاتورة رسمية من قسم الحسابات #' . $i],
+                [
+                    'user_id' => $seller ? $seller->id : 1,
+                    'client_id' => $client->id,
+                    'accountant_id' => $accountant ? $accountant->id : null,
+                    'collector_id' => $accountant ? $accountant->id : null,
+                    'request_type' => ($i % 2 === 0) ? 'sales_product' : 'maintenance_service',
+                    'type' => 'single',
+                    'total_amount' => $amount,
+                    'status' => $invReqStatus,
+                    'issued_at' => in_array($invReqStatus, ['issued', 'client_approved', 'collected']) ? now()->subDays(rand(2, 10)) : null,
+                    'collected_at' => $invReqStatus === 'collected' ? now()->subDays(rand(1, 5)) : null,
+                ]
+            );
 
             InvoiceRequestItem::create([
                 'invoice_request_id' => $invReq->id,

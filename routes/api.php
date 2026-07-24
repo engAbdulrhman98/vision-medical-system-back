@@ -54,10 +54,15 @@ Route::get('/app-download', [\App\Http\Controllers\Api\AppDownloadController::cl
 Route::get('/app/download/apk', [\App\Http\Controllers\Api\AppDownloadController::class, 'downloadApk']);
 Route::get('/seed-database', function() {
     try {
-        (new \Database\Seeders\DatabaseSeeder())->run();
-        return response()->json(['status' => true, 'message' => 'Database populated successfully with products, tasks, clients, and categories!']);
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true, '--seed' => true]);
+        return response()->json(['status' => true, 'message' => 'Database fully refreshed and populated with all products, tasks, clients, and categories!']);
     } catch (\Throwable $e) {
-        return response()->json(['status' => false, 'error' => $e->getMessage()]);
+        try {
+            (new \Database\Seeders\DatabaseSeeder())->run();
+            return response()->json(['status' => true, 'message' => 'Database populated with all products, tasks, clients, and categories!']);
+        } catch (\Throwable $t) {
+            return response()->json(['status' => false, 'error' => $t->getMessage()]);
+        }
     }
 });
 
