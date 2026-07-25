@@ -76,7 +76,8 @@ class EmployeeController extends Controller
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
+            'username' => 'nullable|string|unique:users,username|max:255',
+            'password' => 'required|string|min:6',
             'role'     => 'required|string|exists:roles,name',
         ]);
 
@@ -85,10 +86,21 @@ class EmployeeController extends Controller
             $avatarPath = $request->file('avatar')->store('avatars', 'public');
         }
 
+        $username = $request->username;
+        if (!$username) {
+            $baseUsername = strtolower(explode('@', $request->email)[0]);
+            $username = \Illuminate\Support\Str::slug($baseUsername, '_');
+        }
+
+        $roleName = strtolower($request->role);
+        $isExempt = str_contains($roleName, 'admin') || str_contains($roleName, 'ceo') || str_contains($roleName, 'manager');
+
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
+            'username' => $username,
             'password' => Hash::make($request->password),
+            'must_change_password' => $isExempt ? false : true,
             'avatar'   => $avatarPath,
         ]);
 
@@ -100,7 +112,9 @@ class EmployeeController extends Controller
                 'id'         => $user->id,
                 'name'       => $user->name,
                 'email'      => $user->email,
+                'username'   => $user->username,
                 'role'       => $user->roles->pluck('name')->first(),
+                'must_change_password' => (bool) $user->must_change_password,
                 'avatar'     => $user->avatar ? asset('storage/' . $user->avatar) : null,
                 'created_at' => $user->created_at->format('Y-m-d'),
             ],

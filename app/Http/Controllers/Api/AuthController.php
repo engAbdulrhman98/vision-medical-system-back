@@ -43,7 +43,9 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validated = $request->validate([
-            'email' => 'required|string|email',
+            'login' => 'nullable|string',
+            'email' => 'nullable|string',
+            'username' => 'nullable|string',
             'password' => 'required|string',
         ]);
 
@@ -58,34 +60,52 @@ class AuthController extends Controller
             }
         }
 
-        $email = strtolower(trim($validated['email']));
+        $loginVal = strtolower(trim($request->input('login', $request->input('email', $request->input('username', '')))));
+        if (empty($loginVal)) {
+            throw ValidationException::withMessages([
+                'email' => ['يرجى إدخال اسم المستخدم أو البريد الإلكتروني.'],
+            ]);
+        }
+
         $password = trim($validated['password']);
 
-        // Default accounts dictionary
+        // Default accounts dictionary with usernames
         $defaultAccounts = [
-            'admin@vision-medical.com' => ['name' => 'م. أحمد علي (مدير النظام)', 'pass' => 'admin123', 'role' => 'Admin'],
-            'test@example.com'         => ['name' => 'Test Super Admin',           'pass' => 'password', 'role' => 'Admin'],
-            'ceo@example.com'          => ['name' => 'د. خالد عبد الرحمن (CEO)',  'pass' => 'password', 'role' => 'CEO'],
-            'operations@example.com'   => ['name' => 'م. طارق المحمودي',          'pass' => 'password', 'role' => 'Operations Manager'],
-            'engineer@example.com'     => ['name' => 'م. أسامة مصطفى',            'pass' => 'password', 'role' => 'Service Engineer outdoor'],
-            'accountant@example.com'   => ['name' => 'أ. محمود جابر',             'pass' => 'password', 'role' => 'Accountant'],
-            'inventory@example.com'    => ['name' => 'أ. رانيا الباز',            'pass' => 'password', 'role' => 'Sale'],
+            'admin@vision-medical.com' => ['username' => 'admin',      'name' => 'م. أحمد علي (مدير النظام)', 'pass' => 'admin123', 'role' => 'Admin', 'must_change' => false],
+            'admin'                    => ['username' => 'admin',      'name' => 'م. أحمد علي (مدير النظام)', 'pass' => 'admin123', 'role' => 'Admin', 'must_change' => false],
+            'test@example.com'         => ['username' => 'test_admin', 'name' => 'Test Super Admin',           'pass' => 'password', 'role' => 'Admin', 'must_change' => false],
+            'test_admin'               => ['username' => 'test_admin', 'name' => 'Test Super Admin',           'pass' => 'password', 'role' => 'Admin', 'must_change' => false],
+            'ceo@example.com'          => ['username' => 'ceo',        'name' => 'د. خالد عبد الرحمن (CEO)',  'pass' => 'password', 'role' => 'CEO', 'must_change' => false],
+            'ceo'                      => ['username' => 'ceo',        'name' => 'د. خالد عبد الرحمن (CEO)',  'pass' => 'password', 'role' => 'CEO', 'must_change' => false],
+            'operations@example.com'   => ['username' => 'operations', 'name' => 'م. طارق المحمودي',          'pass' => 'password', 'role' => 'Operations Manager', 'must_change' => false],
+            'operations'               => ['username' => 'operations', 'name' => 'م. طارق المحمودي',          'pass' => 'password', 'role' => 'Operations Manager', 'must_change' => false],
+            'engineer@example.com'     => ['username' => 'engineer',   'name' => 'م. أسامة مصطفى',            'pass' => 'password', 'role' => 'Service Engineer outdoor', 'must_change' => true],
+            'engineer'                 => ['username' => 'engineer',   'name' => 'م. أسامة مصطفى',            'pass' => 'password', 'role' => 'Service Engineer outdoor', 'must_change' => true],
+            'accountant@example.com'   => ['username' => 'accountant', 'name' => 'أ. محمود جابر',             'pass' => 'password', 'role' => 'Accountant', 'must_change' => true],
+            'accountant'               => ['username' => 'accountant', 'name' => 'أ. محمود جابر',             'pass' => 'password', 'role' => 'Accountant', 'must_change' => true],
+            'inventory@example.com'    => ['username' => 'seller',     'name' => 'أ. رانيا الباز',            'pass' => 'password', 'role' => 'Sale', 'must_change' => true],
+            'seller'                   => ['username' => 'seller',     'name' => 'أ. رانيا الباز',            'pass' => 'password', 'role' => 'Sale', 'must_change' => true],
         ];
 
-        $isDefaultMatch = isset($defaultAccounts[$email]) && $password === $defaultAccounts[$email]['pass'];
+        $isDefaultMatch = isset($defaultAccounts[$loginVal]) && $password === $defaultAccounts[$loginVal]['pass'];
 
-        $user = User::where('email', $email)->first();
+        $user = User::where('email', $loginVal)->orWhere('username', $loginVal)->first();
 
         if ($isDefaultMatch) {
-            $info = $defaultAccounts[$email];
+            $info = $defaultAccounts[$loginVal];
             if (!$user) {
                 $user = User::create([
                     'name' => $info['name'],
-                    'email' => $email,
+                    'email' => str_contains($loginVal, '@') ? $loginVal : $loginVal.'@vision-medical.com',
+                    'username' => $info['username'],
                     'password' => Hash::make($info['pass']),
+                    'must_change_password' => $info['must_change'],
                 ]);
                 try { $user->assignRole($info['role']); } catch (\Throwable $t) {}
             } else {
+                if (!$user->username) {
+                    $user->username = $info['username'];
+                }
                 $user->password = Hash::make($info['pass']);
                 $user->save();
             }
@@ -95,12 +115,50 @@ class AuthController extends Controller
             ]);
         }
 
+        // Check user role for mandatory password change exemption
+        $userRole = strtolower($user->roles->first()?->name ?? '');
+        $isExempt = str_contains($userRole, 'admin') || str_contains($userRole, 'ceo') || str_contains($userRole, 'manager');
+        if ($isExempt && $user->must_change_password) {
+            $user->must_change_password = false;
+            $user->save();
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful',
             'access_token' => $token,
             'token_type' => 'Bearer',
+            'must_change_password' => (bool) ($isExempt ? false : $user->must_change_password),
+            'user' => $user->load('roles'),
+        ]);
+    }
+
+    /**
+     * Change Password for authenticated user.
+     */
+    public function changePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['كلمة المرور الحالية غير صحيحة.'],
+            ]);
+        }
+
+        $user->password = Hash::make($validated['new_password']);
+        $user->must_change_password = false;
+        $user->save();
+
+        return response()->json([
+            'message' => 'تم تغيير كلمة المرور بنجاح.',
+            'must_change_password' => false,
             'user' => $user->load('roles'),
         ]);
     }
@@ -110,7 +168,6 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        // Revoke the token that was used to authenticate the current request
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
@@ -123,6 +180,13 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        return response()->json($request->user()->load('roles'));
+        $user = $request->user()->load('roles');
+        $userRole = strtolower($user->roles->first()?->name ?? '');
+        $isExempt = str_contains($userRole, 'admin') || str_contains($userRole, 'ceo') || str_contains($userRole, 'manager');
+        if ($isExempt && $user->must_change_password) {
+            $user->must_change_password = false;
+            $user->save();
+        }
+        return response()->json($user);
     }
 }

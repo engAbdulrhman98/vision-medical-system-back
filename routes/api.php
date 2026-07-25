@@ -69,6 +69,7 @@ Route::get('/seed-database', function() {
 Route::middleware(['auth:sanctum', 'api.activity'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
 
     // Admin, CEO & Manager High-Privilege Endpoints
     Route::middleware('role:Admin,CEO,Manager')->group(function () {
