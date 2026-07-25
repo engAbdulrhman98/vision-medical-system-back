@@ -84,6 +84,7 @@ Route::middleware(['auth:sanctum', 'api.activity'])->group(function () {
         // Roles and Permissions Management
         Route::get('/users', [RolePermissionController::class, 'getUsers']);
         Route::get('/roles', [RolePermissionController::class, 'getRoles']);
+        Route::post('/roles', [RolePermissionController::class, 'createRole']);
         Route::post('/users/assign-role', [RolePermissionController::class, 'assignRole']);
         Route::post('/roles/toggle-permission', [RolePermissionController::class, 'togglePermission']);
 

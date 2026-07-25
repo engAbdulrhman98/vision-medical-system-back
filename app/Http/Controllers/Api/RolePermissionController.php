@@ -109,9 +109,34 @@ class RolePermissionController extends Controller
         }
 
         return response()->json([
-            'message' => "Permission successfully {$action}",
-            'role_name' => $role->name,
-            'permissions' => $role->permissions()->pluck('name')
+            'message' => 'Permission updated successfully',
+            'has_permission' => $role->hasPermissionTo($permission)
         ]);
+    }
+
+    public function createRole(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|unique:roles,name',
+            'description_ar' => 'nullable|string',
+            'description_en' => 'nullable|string'
+        ]);
+
+        $role = Role::create([
+            'name' => trim($validated['name']),
+            'guard_name' => 'web'
+        ]);
+
+        return response()->json([
+            'message' => 'Role created successfully',
+            'role' => [
+                'name' => $role->name,
+                'description' => [
+                    'ar' => $validated['description_ar'] ?? $role->name,
+                    'en' => $validated['description_en'] ?? $role->name
+                ],
+                'permissions' => []
+            ]
+        ], 201);
     }
 }
