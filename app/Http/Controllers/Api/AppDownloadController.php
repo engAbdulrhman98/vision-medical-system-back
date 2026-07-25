@@ -16,8 +16,19 @@ class AppDownloadController extends Controller
 
         $androidUrl = $getSetting('app_android_url', url('/api/app/download/apk'));
         $iosUrl = $getSetting('app_ios_url', 'https://apps.apple.com');
-        $version = $getSetting('app_version', 'v2.4.0');
-        $releaseNotes = $getSetting('app_release_notes', 'تحديث واجهة المهام الميدانية والتكامل السريع مع نظام فيجن ميديكال.');
+        $version = $getSetting('app_version', 'v2.5.2');
+        $releaseNotes = $getSetting('app_release_notes', 'تحديث واجهة عروض الأسعار والفواتير الميدانية والتكامل المباشر مع نظام فيجن ميديكال.');
+
+        $apkPath = public_path('downloads/vision-medical.apk');
+        $fileSize = '52.6 MB';
+        $updatedAt = date('Y-m-d');
+
+        if (file_exists($apkPath)) {
+            $bytes = filesize($apkPath);
+            $mb = round($bytes / 1024 / 1024, 1);
+            $fileSize = $mb . ' MB';
+            $updatedAt = date('Y-m-d', filemtime($apkPath));
+        }
 
         return response()->json([
             'status' => true,
@@ -27,8 +38,8 @@ class AppDownloadController extends Controller
             ],
             'version' => $version,
             'release_notes' => $releaseNotes,
-            'file_size' => '28.4 MB',
-            'updated_at' => '2026-07-24',
+            'file_size' => $fileSize,
+            'updated_at' => $updatedAt,
             'android_download_url' => $androidUrl,
             'ios_download_url' => $iosUrl,
             'direct_apk_url' => url('/api/app/download/apk'),
@@ -37,29 +48,29 @@ class AppDownloadController extends Controller
                 [
                     'icon' => 'fa-screwdriver-wrench',
                     'title' => [
-                        'ar' => 'متابعة المهام الميدانية',
-                        'en' => 'Field Tasks Tracking'
+                        'ar' => 'متابعة المهام الميدانية والزيارات',
+                        'en' => 'Field Tasks & Visits'
                     ],
                     'description' => [
-                        'ar' => 'استلام وتحديث مهام الصيانة والمبيعات في موقع العميل مباشرة.',
+                        'ar' => 'استلام وتحديث مهام الصيانة والمبيعات بجميع مواقع العملاء مباشرة.',
                         'en' => 'Receive & update maintenance and sales visits on site.'
                     ]
                 ],
                 [
-                    'icon' => 'fa-shield-halved',
+                    'icon' => 'fa-file-invoice',
                     'title' => [
-                        'ar' => 'توثيق الزيارات برمز OTP',
-                        'en' => 'OTP Visit Verification'
+                        'ar' => 'عروض الأسعار والطلب الميداني',
+                        'en' => 'Field Quotations & Orders'
                     ],
                     'description' => [
-                        'ar' => 'توثيق الحضور وإتمام الخدمة مع مسؤولي المستشفيات بأمان.',
-                        'en' => 'Securely verify attendance and service with hospital staff.'
+                        'ar' => 'طلب وتجهيز عروض الأسعار والفواتير للمحاسب فورياً أثناء التواجد بالميدان.',
+                        'en' => 'Request & issue field quotations and invoices to accounting instantly.'
                     ]
                 ],
                 [
                     'icon' => 'fa-bell',
                     'title' => [
-                        'ar' => 'إشعارات فورية وبث مباشر',
+                        'ar' => 'إشعارات وبث مباشر',
                         'en' => 'Real-time Push Notifications'
                     ],
                     'description' => [
@@ -79,25 +90,32 @@ class AppDownloadController extends Controller
                     ]
                 ]
             ]
-        ])->header('Cache-Control', 'public, max-age=3600');
+        ])->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+          ->header('Pragma', 'no-cache')
+          ->header('Expires', '0');
     }
 
     public function downloadApk()
     {
         $apkPath = public_path('downloads/vision-medical.apk');
 
+        $settings = Setting::pluck('value', 'key')->toArray();
+        $version = $settings['app_version'] ?? 'v2.5.2';
+
         if (file_exists($apkPath)) {
-            return response()->download($apkPath, 'vision-medical-v2.4.0.apk', [
+            return response()->download($apkPath, "vision-medical-{$version}.apk", [
                 'Content-Type' => 'application/vnd.android.package-archive',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
             ]);
         }
 
-        // Fallback response with download link info
         return response()->json([
             'message' => 'جاري تجهيز الإصدار الأحدث من تطبيق فيجن ميديكال...',
-            'version' => 'v2.4.0',
+            'version' => $version,
             'download_url' => url('/api/app-download'),
-            'file_name' => 'vision-medical-v2.4.0.apk'
+            'file_name' => "vision-medical-{$version}.apk"
         ]);
     }
 }
