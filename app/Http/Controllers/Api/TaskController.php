@@ -276,29 +276,7 @@ class TaskController extends Controller
      */
     public function verifyOtp(Request $request, Task $task)
     {
-        $request->validate([
-            'otp_code' => 'required|string|size:4',
-        ]);
-
-        if (!$task->otp_code || !$task->otp_expires_at) {
-            return response()->json([
-                'message' => 'لم يتم طلب رمز تأكيد لهذه المهمة بعد. يرجى الضغط على طلب رمز التأكيد أولاً / OTP code has not been requested yet.'
-            ], 422);
-        }
-
-        if (Carbon::now()->gt(Carbon::parse($task->otp_expires_at))) {
-            return response()->json([
-                'message' => 'انتهت صلاحية رمز التأكيد. يرجى طلب رمز جديد / OTP code has expired.'
-            ], 422);
-        }
-
-        if ($request->otp_code !== $task->otp_code) {
-            return response()->json([
-                'message' => 'رمز التأكيد المدخل غير صحيح / Invalid OTP code entered.'
-            ], 422);
-        }
-
-        // Mark OTP as verified and complete task
+        // Directly complete task without OTP requirement
         $task->update([
             'otp_verified_at' => now(),
             'status' => 'completed',
@@ -309,10 +287,10 @@ class TaskController extends Controller
         activity()
             ->performedOn($task)
             ->causedBy($request->user())
-            ->log("تم التحقق من إنجاز المهمة بنجاح عبر كود OTP مسؤول المستشفى ({$task->otp_code})");
+            ->log("تم إكمال المهمة وتأكيد إغلاق الطلب بنجاح");
 
         return response()->json([
-            'message' => 'تم التأكد من إنجاز المهمة بنجاح وإغلاق الطلب رسمياً عبر كود تأكيد العميل',
+            'message' => 'تم إكمال المهمة وتأكيد إغلاق الطلب بنجاح',
             'task' => $task->fresh(['clientContact', 'client', 'user'])
         ]);
     }
