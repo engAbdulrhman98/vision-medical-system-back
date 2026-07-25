@@ -52,8 +52,8 @@ class SettingController extends Controller
             'company_map_link'   => $g('company_map_link'),
             'app_android_url'    => $g('app_android_url', url('/api/app/download/apk')),
             'app_ios_url'        => $g('app_ios_url', 'https://apps.apple.com'),
-            'app_version'        => $g('app_version', 'v2.4.0'),
-            'app_release_notes'  => $g('app_release_notes', 'تحديث واجهة المهام الميدانية والتكامل السريع مع نظام فيجن ميديكال.'),
+            'app_version'        => $g('app_version', 'v2.5.2'),
+            'app_release_notes'  => $g('app_release_notes', 'تحديث واجهة عروض الأسعار والفواتير الميدانية والتكامل المباشر مع نظام فيجن ميديكال.'),
             'working_hours_days' => $workingHoursDays,
         ])->header('Cache-Control', 'private, no-cache');
     }
@@ -112,7 +112,7 @@ class SettingController extends Controller
         Setting::setValue('company_map_link', $data['company_map_link'] ?? '');
         Setting::setValue('app_android_url', $data['app_android_url'] ?? '');
         Setting::setValue('app_ios_url', $data['app_ios_url'] ?? '');
-        Setting::setValue('app_version', $data['app_version'] ?? 'v2.4.0');
+        Setting::setValue('app_version', $data['app_version'] ?? 'v2.5.2');
         Setting::setValue('app_release_notes', $data['app_release_notes'] ?? '');
 
         // Save per-day working hours
