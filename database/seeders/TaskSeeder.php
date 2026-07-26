@@ -216,19 +216,45 @@ class TaskSeeder extends Seeder
             $assignee = ($tmpl['type'] === 'external') ? $engineer : $tech;
             $device = $devices[$idx % count($devices)];
 
-            $isCompleted = ($tmpl['status'] === 'completed');
+            $governorateId = null;
+            $cityId = null;
+            if ($client && $client->area) {
+                if ($client->area->type === 'city') {
+                    $cityId = $client->area->id;
+                    $governorateId = $client->area->parent_id;
+                } else if ($client->area->type === 'governorate') {
+                    $governorateId = $client->area->id;
+                }
+            }
+
+            // Distribute workflow statuses for rich testing
+            $status = $tmpl['status'];
+            if ($idx == 2) {
+                $status = 'awaiting_accountant';
+            } elseif ($idx == 3) {
+                $status = 'accountant_ready';
+            } elseif ($idx == 6) {
+                $status = 'rejected';
+            }
+
+            $isCompleted = ($status === 'completed');
             $otpCode = str_pad((string)rand(1000, 9999), 4, '0', STR_PAD_LEFT);
 
             $task = Task::create([
                 'title' => $tmpl['title'],
                 'description' => $tmpl['desc'],
-                'status' => $tmpl['status'],
-                'progress' => $tmpl['progress'],
+                'status' => $status,
+                'progress' => $isCompleted ? 100 : ($status === 'accountant_ready' ? 80 : ($status === 'awaiting_accountant' ? 50 : $tmpl['progress'])),
                 'priority' => $tmpl['priority'],
                 'type' => $tmpl['type'],
+                'action_type' => ($status === 'awaiting_accountant' || $status === 'accountant_ready') ? 'invoice_request' : 'quotation_request',
+                'accountant_note' => $status === 'accountant_ready' ? 'تم تجهيز الفاتورة وسند التوريد والمحاسبة جاهزة بالتنسيق مع المستشفى' : null,
+                'rejection_reason' => $status === 'rejected' ? 'تم رفض العرض لارتفاع ميزانية قطع الغيار المطلوبة' : null,
                 'device_id' => $device ? $device->id : null,
                 'client_id' => $client->id,
                 'client_contact_id' => $contact ? $contact->id : null,
+                'governorate_id' => $governorateId,
+                'city_id' => $cityId,
                 'user_id' => $assignee ? $assignee->id : $admin->id,
                 'scheduled_at' => now()->addDays(rand(-10, 10)),
                 'completed_at' => $isCompleted ? now()->subDays(rand(1, 5)) : null,
