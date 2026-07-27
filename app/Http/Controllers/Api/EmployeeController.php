@@ -71,8 +71,18 @@ class EmployeeController extends Controller
     /**
      * Store a new employee.
      */
+    /**
+     * Store a new employee.
+     */
     public function store(Request $request)
     {
+        // Strictly authorize: ONLY Admin role can create employee accounts
+        if (!$request->user() || !$request->user()->hasRole('Admin')) {
+            return response()->json([
+                'message' => 'عذراً! مدير النظام (Admin) فقط هو المصرح له بإنشاء حسابات الموظفين جديدة.'
+            ], 403);
+        }
+
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
@@ -126,6 +136,12 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, User $employee)
     {
+        if (!$request->user() || !$request->user()->hasRole('Admin')) {
+            return response()->json([
+                'message' => 'عذراً! مدير النظام (Admin) فقط هو المصرح له بتعديل حسابات الموظفين.'
+            ], 403);
+        }
+
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email,' . $employee->id,
@@ -156,9 +172,21 @@ class EmployeeController extends Controller
     /**
      * Delete an employee account.
      */
-    public function destroy(User $employee)
+    public function destroy(Request $request, User $employee)
     {
+        if (!$request->user() || !$request->user()->hasRole('Admin')) {
+            return response()->json([
+                'message' => 'عذراً! مدير النظام (Admin) فقط هو المصرح له بحذف حسابات الموظفين.'
+            ], 403);
+        }
+
         // Prevent deleting yourself
+        if ($request->user()->id === $employee->id) {
+            return response()->json([
+                'message' => 'لا يمكنك حذف حسابك الشخصي الحقيقي أثناء تسجيل الدخول.'
+            ], 422);
+        }
+
         $employee->delete();
 
         return response()->json(['message' => 'Employee deleted successfully']);
