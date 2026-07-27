@@ -20,7 +20,8 @@ class StoreMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body' => 'required|string',
+            'body' => 'required_without:message|nullable|string',
+            'message' => 'required_without:body|nullable|string',
         ];
     }
 }

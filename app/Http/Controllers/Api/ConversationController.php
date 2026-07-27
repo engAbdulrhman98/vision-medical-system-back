@@ -35,11 +35,12 @@ class ConversationController extends Controller
     {
         $validated = $request->validated();
         $isGroup = $validated['is_group'] ?? false;
-        $userIds = array_unique(array_merge($validated['participant_ids'], [$request->user()->id]));
+        $participants = $validated['participant_ids'] ?? $validated['user_ids'] ?? [];
+        $userIds = array_unique(array_merge($participants, [$request->user()->id]));
 
         // If direct conversation (not group) between 2 users, check if already exists
         if (!$isGroup && count($userIds) === 2) {
-            $otherUserId = $validated['participant_ids'][0];
+            $otherUserId = reset($participants);
             
             $existing = Conversation::where('is_group', false)
                 ->whereHas('users', function ($q) use ($request) {
@@ -115,9 +116,11 @@ class ConversationController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        $bodyText = $request->input('body', $request->input('message', ''));
+
         $message = $conversation->messages()->create([
             'user_id' => $request->user()->id,
-            'body' => $request->body,
+            'body' => $bodyText,
         ]);
 
         // Touch parent conversation to float it to top on index queries

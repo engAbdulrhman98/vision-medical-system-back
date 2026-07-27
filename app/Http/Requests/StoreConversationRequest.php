@@ -22,8 +22,10 @@ class StoreConversationRequest extends FormRequest
         return [
             'name' => 'nullable|string|max:255',
             'is_group' => 'nullable|boolean',
-            'participant_ids' => 'required|array|min:1',
+            'participant_ids' => 'required_without:user_ids|array|min:1',
             'participant_ids.*' => 'integer|exists:users,id',
+            'user_ids' => 'required_without:participant_ids|array|min:1',
+            'user_ids.*' => 'integer|exists:users,id',
         ];
     }
 }
