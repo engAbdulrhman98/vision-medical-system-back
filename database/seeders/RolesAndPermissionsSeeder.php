@@ -112,47 +112,62 @@ class RolesAndPermissionsSeeder extends Seeder
             'delete devices',
         ]);
 
-        // Service Engineer outdoor
+        // Service Engineer outdoor (مهندس صيانة خارجي/ميداني)
         $engineerOutdoorRole = Role::findOrCreate('Service Engineer outdoor');
         $engineerOutdoorRole->givePermissionTo([
+            'view clients',
+            'create clients',
+            'edit clients',
             'view tasks',
+            'view external_tasks',
             'view devices',
+            'create_quotation',
+            'view quotations',
             'view maintenance_reports',
             'create maintenance_reports',
             'edit maintenance_reports',
-            'delete maintenance_reports',
         ]);
 
-        // Service Engineer indoor
+        // Service Engineer indoor (مهندس صيانة داخلي/ورشة)
         $engineerIndoorRole = Role::findOrCreate('Service Engineer indoor');
         $engineerIndoorRole->givePermissionTo([
             'view tasks',
+            'view devices',
             'view stock_items',
-            'edit stock_items', // to deduct/use spare parts
+            'edit stock_items',
             'view products',
+            'view maintenance_reports',
+            'create maintenance_reports',
         ]);
 
-        // Accountant
+        // Accountant (محاسب)
         $accountantRole = Role::findOrCreate('Accountant');
         $accountantRole->givePermissionTo([
+            'view clients',
             'view quotations',
             'create quotations',
             'edit quotations',
             'delete quotations',
-            'view products',
+            'view invoices',
+            'view invoice_requests',
             'view financials',
             'manage financials',
+            'view_financial_reports',
         ]);
 
-        // Sale
+        // Sale (مسؤول مبيعات)
         $saleRole = Role::findOrCreate('Sale');
         $saleRole->givePermissionTo([
+            'view clients',
+            'create clients',
+            'edit clients',
+            'view tasks',
             'view stock_items',
             'view products',
             'create products',
             'edit products',
-            'delete products',
             'view quotations',
+            'create_quotation',
             'create quotations',
         ]);
     }
