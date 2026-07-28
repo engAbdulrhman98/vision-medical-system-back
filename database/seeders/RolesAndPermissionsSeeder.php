@@ -75,6 +75,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view invoice_requests',
             'view financials',
             'manage financials',
+            'view_financial_reports',
 
             // Users & System Settings (Super Admin / CEO only)
             'manage users',
