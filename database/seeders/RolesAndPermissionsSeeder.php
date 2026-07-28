@@ -56,13 +56,23 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit products',
             'delete products',
 
+            // Clients & Field Operations
+            'view clients',
+            'create clients',
+            'edit clients',
+            'delete clients',
+            'view external_tasks',
+
             // Quotations
             'view quotations',
             'create quotations',
+            'create_quotation',
             'edit quotations',
             'delete quotations',
 
-            // Financials (Accountant specifics)
+            // Invoices & Financials (Accountant specifics)
+            'view invoices',
+            'view invoice_requests',
             'view financials',
             'manage financials',
 
