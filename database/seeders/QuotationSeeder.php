@@ -18,10 +18,8 @@ class QuotationSeeder extends Seeder
      */
     public function run(): void
     {
-        $clients = Client::all();
-        if ($clients->isEmpty()) {
-            return;
-        }
+        // QuotationSeeder dummy generation hidden as per user request
+        return;
 
         $seller = User::role('Sale')->first() ?? User::first();
         $accountant = User::role('Accountant')->first() ?? User::first();

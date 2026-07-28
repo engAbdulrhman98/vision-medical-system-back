@@ -78,7 +78,7 @@ class DatabaseSeeder extends Seeder
             ContactMessageSeeder::class,
             AreaSeeder::class,
             ClientSeeder::class,
-            QuotationSeeder::class,
+            // QuotationSeeder::class, // Hidden as per user request
             NotificationSeeder::class,
             ConversationSeeder::class,
             TaskSeeder::class,
