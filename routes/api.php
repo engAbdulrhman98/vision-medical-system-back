@@ -72,8 +72,8 @@ Route::middleware(['auth:sanctum', 'api.activity'])->group(function () {
     Route::get('/users', [RolePermissionController::class, 'getUsers']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
 
-    // Admin, CEO & Manager High-Privilege Endpoints
-    Route::middleware('role:Admin,CEO,Manager')->group(function () {
+    // Admin, CEO & Operations Manager High-Privilege Endpoints
+    Route::middleware('permission:manage users')->group(function () {
         // Employees Management
         Route::get('/employees', [EmployeeController::class, 'index']);
         Route::post('/employees', [EmployeeController::class, 'store']);
@@ -87,7 +87,9 @@ Route::middleware(['auth:sanctum', 'api.activity'])->group(function () {
         Route::post('/roles', [RolePermissionController::class, 'createRole']);
         Route::post('/users/assign-role', [RolePermissionController::class, 'assignRole']);
         Route::post('/roles/toggle-permission', [RolePermissionController::class, 'togglePermission']);
+    });
 
+    Route::middleware('permission:manage settings')->group(function () {
         // System Settings & Activity Logs
         Route::post('/settings', [SettingController::class, 'update']);
         Route::get('/activity-logs', [ActivityLogController::class, 'index']);
@@ -110,19 +112,21 @@ Route::middleware(['auth:sanctum', 'api.activity'])->group(function () {
     Route::put('/areas/{area}', [AreaController::class, 'update']);
     Route::delete('/areas/{area}', [AreaController::class, 'destroy']);
 
-
-
     // Quotations
-    Route::post('/quotations', [QuotationController::class, 'store']);
-    Route::post('/quotations/{quotation}', [QuotationController::class, 'update']);
-    Route::put('/quotations/{quotation}', [QuotationController::class, 'update']);
-    Route::delete('/quotations/{quotation}', [QuotationController::class, 'destroy']);
+    Route::middleware('permission:create quotations,create_quotation,view quotations')->group(function () {
+        Route::post('/quotations', [QuotationController::class, 'store']);
+        Route::post('/quotations/{quotation}', [QuotationController::class, 'update']);
+        Route::put('/quotations/{quotation}', [QuotationController::class, 'update']);
+        Route::delete('/quotations/{quotation}', [QuotationController::class, 'destroy']);
+    });
 
-    // Invoices
-    Route::post('/invoices', [InvoiceController::class, 'store']);
-    Route::post('/invoices/{invoice}', [InvoiceController::class, 'update']);
-    Route::put('/invoices/{invoice}', [InvoiceController::class, 'update']);
-    Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy']);
+    // Invoices & Financials
+    Route::middleware('permission:view invoices,manage financials')->group(function () {
+        Route::post('/invoices', [InvoiceController::class, 'store']);
+        Route::post('/invoices/{invoice}', [InvoiceController::class, 'update']);
+        Route::put('/invoices/{invoice}', [InvoiceController::class, 'update']);
+        Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy']);
+    });
 
     // Invoice Requests Workflow
     Route::get('/invoice-requests', [\App\Http\Controllers\Api\InvoiceRequestController::class, 'index']);

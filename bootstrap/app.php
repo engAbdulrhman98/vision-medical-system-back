@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Named Middleware Aliases
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRoleMiddleware::class,
+            'permission' => \App\Http\Middleware\CheckPermissionMiddleware::class,
             'force.json' => \App\Http\Middleware\ForceJsonResponseMiddleware::class,
             'api.locale' => \App\Http\Middleware\SetApiLocaleMiddleware::class,
             'api.activity' => \App\Http\Middleware\LogApiActivityMiddleware::class,
