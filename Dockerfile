@@ -28,10 +28,11 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader
 
 # Storage permissions
-RUN chmod -R 777 storage bootstrap/cache
+RUN touch database/database.sqlite && chmod -R 777 storage bootstrap/cache database
 
 # Expose Railway PORT
 EXPOSE 8080
 
 # Start command
-CMD ["sh", "-c", "php artisan migrate --force && (php artisan db:seed --force || true) && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+CMD ["sh", "-c", "(php artisan migrate --force || true) && (php artisan db:seed --force || true) && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+
