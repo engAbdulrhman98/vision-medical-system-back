@@ -50,15 +50,11 @@ class AuthController extends Controller
         ]);
 
         // Auto-seed all catalog, tasks, clients, and demo data if products/categories are empty
-        if (\App\Models\Product::count() === 0 || \App\Models\Category::count() === 0) {
-            try {
+        try {
+            if (\App\Models\Product::count() === 0 || \App\Models\Category::count() === 0) {
                 \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-            } catch (\Throwable $e) {
-                try {
-                    (new \Database\Seeders\DatabaseSeeder())->run();
-                } catch (\Throwable $t) {}
             }
-        }
+        } catch (\Throwable $e) {}
 
         $loginVal = strtolower(trim($request->input('login', $request->input('email', $request->input('username', '')))));
         if (empty($loginVal)) {
@@ -116,7 +112,11 @@ class AuthController extends Controller
         }
 
         // Check user role for mandatory password change exemption
-        $userRole = strtolower($user->roles->first()?->name ?? '');
+        $userRole = '';
+        try {
+            $userRole = strtolower($user->roles->first()?->name ?? '');
+        } catch (\Throwable $t) {}
+
         $isExempt = str_contains($userRole, 'admin') || str_contains($userRole, 'ceo') || str_contains($userRole, 'manager');
         if ($isExempt && $user->must_change_password) {
             $user->must_change_password = false;
@@ -125,12 +125,16 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        try {
+            $user->load('roles');
+        } catch (\Throwable $t) {}
+
         return response()->json([
             'message' => 'Login successful',
             'access_token' => $token,
             'token_type' => 'Bearer',
             'must_change_password' => (bool) ($isExempt ? false : $user->must_change_password),
-            'user' => $user->load('roles'),
+            'user' => $user,
         ]);
     }
 
