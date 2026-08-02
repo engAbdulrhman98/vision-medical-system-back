@@ -28,9 +28,9 @@ class NotificationSeeder extends Seeder
                 'type' => 'task_assigned',
             ],
             [
-                'title' => ['ar' => 'رمز تأكيد إغلاق المهمة OTP', 'en' => 'Task Verification OTP'],
-                'body' => ['ar' => 'تم إرسال رمز التأكيد لمسؤول المستشفى لإكمال المهمة بنجاح.', 'en' => 'OTP generated for hospital contact person.'],
-                'type' => 'otp_generated',
+                'title' => ['ar' => 'تأكيد إغلاق المهمة', 'en' => 'Task Completion Verified'],
+                'body' => ['ar' => 'تم إكمال المهمة بنجاح وإغلاق الطلب.', 'en' => 'Task completed successfully.'],
+                'type' => 'task_completed',
             ],
             [
                 'title' => ['ar' => 'طلب عرض سعر جديد للمبيعات', 'en' => 'New Quotation Request'],

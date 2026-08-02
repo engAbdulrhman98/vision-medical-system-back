@@ -276,7 +276,7 @@ class TaskSeeder extends Seeder
                     TaskUpdate::create([
                         'task_id' => $task->id,
                         'user_id' => $task->user_id,
-                        'note' => 'تم الانتهاء بنجاح واستلام كود الـ OTP من مسؤول المستشفى وتوثيق إغلاق الطلب.',
+                        'note' => 'تم الانتهاء بنجاح وتأكيد وتوثيق إغلاق الطلب.',
                         'progress' => 100,
                     ]);
                 }

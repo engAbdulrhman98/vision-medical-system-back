@@ -211,12 +211,14 @@ class TaskController extends Controller
     public function updateStatus(Request $request, Task $task)
     {
         $request->validate([
-            'status' => 'required|string|in:pending,in_progress,completed,cancelled',
+            'status' => 'required|string|in:pending,in_progress,completed,cancelled,rejected,awaiting_accountant',
         ]);
 
         $task->update([
             'status' => $request->status,
             'completed_at' => $request->status === 'completed' ? now() : $task->completed_at,
+            'progress' => $request->status === 'completed' ? 100 : $task->progress,
+            'otp_verified_at' => $request->status === 'completed' ? now() : $task->otp_verified_at,
         ]);
 
         return response()->json([
