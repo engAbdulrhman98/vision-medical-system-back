@@ -3,6 +3,26 @@
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 
+// Clean any leading/trailing spaces in DB environment variables injected by platform
+foreach (['DB_USERNAME', 'DB_HOST', 'DB_PASSWORD', 'DB_DATABASE', 'DB_PORT', 'DB_URL', 'MYSQLUSER', 'MYSQLPASSWORD', 'MYSQLHOST', 'MYSQLDATABASE', 'MYSQLPORT', 'MYSQL_URL'] as $key) {
+    if (isset($_ENV[$key]) && is_string($_ENV[$key])) {
+        $_ENV[$key] = trim($_ENV[$key]);
+    }
+    if (isset($_SERVER[$key]) && is_string($_SERVER[$key])) {
+        $_SERVER[$key] = trim($_SERVER[$key]);
+    }
+    if (($val = getenv($key)) !== false) {
+        putenv("$key=" . trim($val));
+    }
+}
+
+if (isset($_ENV['DB_URL']) && is_string($_ENV['DB_URL'])) {
+    $_ENV['DB_URL'] = preg_replace('#(mysql://)\s*#i', '$1', $_ENV['DB_URL']);
+}
+if (isset($_SERVER['DB_URL']) && is_string($_SERVER['DB_URL'])) {
+    $_SERVER['DB_URL'] = preg_replace('#(mysql://)\s*#i', '$1', $_SERVER['DB_URL']);
+}
+
 return [
 
     /*
