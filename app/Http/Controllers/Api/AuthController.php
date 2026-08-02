@@ -85,26 +85,34 @@ class AuthController extends Controller
             ];
 
             $isDefaultMatch = isset($defaultAccounts[$loginVal]) && $password === $defaultAccounts[$loginVal]['pass'];
+            $targetEmail = str_contains($loginVal, '@') ? $loginVal : $loginVal.'@vision-medical.com';
 
-            $user = User::where('email', $loginVal)->orWhere('username', $loginVal)->first();
+            $user = User::where('email', $loginVal)
+                        ->orWhere('username', $loginVal)
+                        ->orWhere('email', $targetEmail)
+                        ->first();
 
             if ($isDefaultMatch) {
                 $info = $defaultAccounts[$loginVal];
                 if (!$user) {
+                    $user = User::where('email', $targetEmail)
+                                ->orWhere('username', $info['username'])
+                                ->first();
+                }
+                if (!$user) {
                     $user = User::create([
                         'name' => $info['name'],
-                        'email' => str_contains($loginVal, '@') ? $loginVal : $loginVal.'@vision-medical.com',
+                        'email' => $targetEmail,
                         'username' => $info['username'],
                         'password' => Hash::make($info['pass']),
                         'must_change_password' => $info['must_change'],
                     ]);
                     try { $user->assignRole($info['role']); } catch (\Throwable $t) {}
                 } else {
-                    if (!$user->username) {
-                        $user->username = $info['username'];
-                    }
+                    $user->username = $info['username'];
                     $user->password = Hash::make($info['pass']);
                     $user->save();
+                    try { $user->assignRole($info['role']); } catch (\Throwable $t) {}
                 }
             } else if (!$user || !Hash::check($password, $user->password)) {
                 throw ValidationException::withMessages([
