@@ -87,37 +87,29 @@ class AuthController extends Controller
             $isDefaultMatch = isset($defaultAccounts[$loginVal]) && $password === $defaultAccounts[$loginVal]['pass'];
             $targetEmail = str_contains($loginVal, '@') ? $loginVal : $loginVal.'@vision-medical.com';
 
-            $user = User::where('email', $loginVal)
-                        ->orWhere('username', $loginVal)
-                        ->orWhere('email', $targetEmail)
-                        ->first();
-
             if ($isDefaultMatch) {
                 $info = $defaultAccounts[$loginVal];
-                if (!$user) {
-                    $user = User::where('email', $targetEmail)
-                                ->orWhere('username', $info['username'])
-                                ->first();
-                }
-                if (!$user) {
-                    $user = User::create([
+                $user = User::updateOrCreate(
+                    ['email' => $targetEmail],
+                    [
                         'name' => $info['name'],
-                        'email' => $targetEmail,
                         'username' => $info['username'],
                         'password' => Hash::make($info['pass']),
                         'must_change_password' => $info['must_change'],
+                    ]
+                );
+                try { $user->assignRole($info['role']); } catch (\Throwable $t) {}
+            } else {
+                $user = User::where('email', $loginVal)
+                            ->orWhere('username', $loginVal)
+                            ->orWhere('email', $targetEmail)
+                            ->first();
+
+                if (!$user || !Hash::check($password, $user->password)) {
+                    throw ValidationException::withMessages([
+                        'email' => [__('auth.failed')],
                     ]);
-                    try { $user->assignRole($info['role']); } catch (\Throwable $t) {}
-                } else {
-                    $user->username = $info['username'];
-                    $user->password = Hash::make($info['pass']);
-                    $user->save();
-                    try { $user->assignRole($info['role']); } catch (\Throwable $t) {}
                 }
-            } else if (!$user || !Hash::check($password, $user->password)) {
-                throw ValidationException::withMessages([
-                    'email' => [__('auth.failed')],
-                ]);
             }
 
             // Check user role for mandatory password change exemption
