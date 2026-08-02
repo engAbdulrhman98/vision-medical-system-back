@@ -156,6 +156,15 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_financial_reports',
         ]);
 
+        // Collector (المحصل)
+        $collectorRole = Role::findOrCreate('Collector');
+        $collectorRole->givePermissionTo([
+            'view clients',
+            'view invoices',
+            'view invoice_requests',
+            'view financials',
+        ]);
+
         // Sale (مسؤول مبيعات)
         $saleRole = Role::findOrCreate('Sale');
         $saleRole->givePermissionTo([
