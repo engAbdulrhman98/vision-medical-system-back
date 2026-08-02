@@ -34,7 +34,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
-        );
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            if ($request->is('api/*') && !($e instanceof \Illuminate\Validation\ValidationException)) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'exception' => get_class($e),
+                    'file' => $e->getFile().':'.$e->getLine(),
+                ], 500);
+            }
+        });
     })->create();
