@@ -13,18 +13,33 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'username', 'password', 'must_change_password'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
+    protected $fillable = [
+        'name',
+        'email',
+        'username',
+        'password',
+        'must_change_password',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
     protected $appends = ['all_permissions'];
 
     public function getAllPermissionsAttribute()
     {
-        return $this->getAllPermissions()->pluck('name')->toArray();
+        try {
+            return $this->getAllPermissions()->pluck('name')->toArray();
+        } catch (\Throwable $t) {
+            return [];
+        }
     }
 
     /**
